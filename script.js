@@ -1,12 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const basket = document.getElementById('basket');
-    const fruit = document.getElementById('fruit');
-    const bladesContainer = document.getElementById('blades-container');
-    const scoreValue = document.getElementById('score-value');
-    const gameOverMessage = document.getElementById('game-over-message');
-    const restartButton = document.getElementById('restart-button');
 
     // Make the canvas responsive
     canvas.width = window.innerWidth;
@@ -21,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Game variables
-    let basketX = canvas.width / 2 - 75; // Center the basket
+    let basketX = canvas.width / 2 - 150 / 2; // Center the basket with increased width
     let basketY = canvas.height - 70; // Position of the basket
     let fruitX = Math.random() * (canvas.width - 40); // Adjusted for larger apple
     let fruitY = 0;
@@ -44,6 +38,27 @@ document.addEventListener('DOMContentLoaded', () => {
         speed: 0.05, // Uniform speed for all blades
         size: bladeSpacing / 2, // Blade size proportional to spacing
     }));
+
+    // Draw wooden board (basket) with increased width
+    function drawBasket() {
+        ctx.fillStyle = '#964B00'; // Brown color for wood
+        ctx.fillRect(basketX, basketY, 150, 20); // Increased width to 150
+        ctx.strokeStyle = '#5C4033';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(basketX, basketY, 150, 20);
+    }
+
+    // Draw fruit (larger apple)
+    function drawFruit() {
+        if (!isSquished) {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(fruitX + 20, fruitY + 20, 20, 0, Math.PI * 2); // Larger apple radius (20)
+            ctx.fill();
+            ctx.fillStyle = 'green';
+            ctx.fillRect(fruitX + 18, fruitY, 4, 8); // Adjusted stem dimensions for larger apple
+        }
+    }
 
     // Draw spinning blades
     function drawBlades() {
@@ -89,25 +104,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function update() {
         if (!gameOver) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBasket();
             drawBlades();
 
             // Move basket smoothly
             if (moveLeft && basketX > 0) {
                 basketX -= basketSpeed;
-                basket.style.left = `${basketX}px`;
             }
             if (moveRight && basketX < canvas.width - 150) {
                 basketX += basketSpeed;
-                basket.style.left = `${basketX}px`;
             }
 
             // Move fruit
             if (!isSquished) {
                 fruitX += fruitVelX;
                 fruitY += fruitVelY;
-
-                fruit.style.left = `${fruitX}px`;
-                fruit.style.top = `${fruitY}px`;
 
                 // Collision detection with basket
                 if (
@@ -154,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 });
+
+                drawFruit(); 
             } else { 
                 if (Date.now() < squishEndTime) { 
                     drawFruitPieces(); 
@@ -162,7 +175,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            scoreValue.textContent = score;
+            ctx.font='24px Arial';
+            ctx.fillStyle='black';
+            ctx.fillText(`Score: ${score}`,10 ,30);
 
             requestAnimationFrame(update); 
         } else { 
@@ -197,12 +212,57 @@ document.addEventListener('DOMContentLoaded', () => {
    }
 
    function displayGameOver(){
-       gameOverMessage.style.display = 'block';
-       gameOverMessage.textContent = 'Game Over';
-       restartButton.style.display = 'block';
-       restartButton.addEventListener('click', () => {
-           location.reload();
-       });
+       ctx.clearRect(0 ,0 ,canvas.width ,canvas.height); 
+       drawBasket(); 
+       drawBlades(); 
+       ctx.font='48px Arial'; 
+       ctx.fillStyle='black'; 
+       ctx.textAlign='center'; 
+       ctx.textBaseline='middle'; 
+       ctx.fillText('Game Over',canvas.width/2 ,canvas.height/2-50); 
+       ctx.font='24px Arial'; 
+       ctx.fillStyle='black'; 
+       ctx.textAlign='center'; 
+       ctx.textBaseline='middle'; 
+       ctx.fillText(`Final Score: ${score}`,canvas.width/2 ,canvas.height/2); 
+
+       drawRestartButton();  
+   }
+
+   function drawRestartButton(){
+       const buttonWidth=100 ; 
+       const buttonHeight=50 ; 
+       const buttonX=canvas.width/2-buttonWidth/2 ; 
+       const buttonY=canvas.height/2+100 ; 
+
+       ctx.fillStyle='green'; 
+       ctx.fillRect(buttonX ,buttonY ,buttonWidth ,buttonHeight); 
+
+       ctx.font='24px Arial'; 
+       ctx.fillStyle='white'; 
+       ctx.textAlign='center'; 
+       ctx.textBaseline='middle'; 
+       ctx.fillText('Restart',canvas.width/2 ,buttonY+buttonHeight/2); 
+
+       addRestartListeners(buttonX ,buttonY ,buttonWidth ,buttonHeight);  
+   }
+
+   function addRestartListeners(buttonX ,buttonY ,buttonWidth ,buttonHeight){
+      document.addEventListener('keydown' ,(e)=>{
+          if(e.key===' '){  
+              location.reload();  
+          }
+      });
+
+      canvas.addEventListener('click' ,(e)=>{
+          const rect=canvas.getBoundingClientRect(); 
+          const x=e.clientX-rect.left;  
+          const y=e.clientY-rect.top;
+
+          if(x>buttonX && x<buttonX+buttonWidth && y>buttonY && y<buttonY+buttonHeight){  
+              location.reload();  
+          }
+      });
    }
 
    update();   
